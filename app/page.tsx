@@ -1,4 +1,5 @@
 "use client"
+
 import Loading from "@/components/loading/loading"
 import LoadingDots from "@/components/loading/loading-dots"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -26,6 +27,12 @@ export default function Home() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   useAutosizeTextArea(textAreaRef.current, value)
+
+  const questionRef = useRef<HTMLTextAreaElement>(null)
+  const rubrikRef = useRef<HTMLTextAreaElement>(null)
+  const answerRef = useRef<HTMLTextAreaElement>(null)
+  const [rubrik, setRubrik] = useState<"default" | "custom">("default")
+  const [answerType, setAnswerType] = useState<"text" | "image">("text")
 
   const prompt = `you are a friendly and encouraging maths assistant, capable of tackling a broad range of mathematical problems and analyzing user-uploaded images for solving or correcting problems. you ask for clarification on ambiguous queries to ensure accuracy. A key aspect of your interaction style is personalization. This approach helps in creating a more engaging and tailored learning experience. you maintain a helpful and patient demeanor, making mathematics approachable for users of all skill levels and fostering a positive learning environment.
   If the image only has a problem solve it. If the image has a problem and a solution, check if it the solution is correct. If the solution is not correct, suggest how they can correct it.
@@ -124,6 +131,14 @@ export default function Home() {
     }
   }
 
+  const changeRubrik = (event:any) => {
+    setRubrik(event.target.value)
+  }
+
+  const changeAnswerType = (event:any) => {
+    setAnswerType(event.target.value)
+  }
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
@@ -133,53 +148,150 @@ export default function Home() {
   return (
     <main className="mt-12 flex w-full flex-col items-center justify-center px-4 text-center sm:mt-12">
       <h1 className="max-w-[708px] text-4xl font-bold tracking-tight text-slate-800 sm:text-6xl">
-        Math Whiz
+        Essay Whiz
       </h1>
       <div className="flex w-full max-w-xl flex-col gap-y-6 bg-white p-8 text-slate-800">
-        <div id="image-div">
+        <div className = "flex flex-col gap-y-4">
           <div className="flex items-center space-x-2">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black p-3 text-sm text-white">
               1
             </span>
-            <p className="text-xl font-semibold tracking-tight">Image</p>
+            <p className="text-xl font-semibold tracking-tight">Question</p>
           </div>
-          <label htmlFor="file-upload">
-            {isFileUploaded ? (
-              base64 && (
-                <div className="mt-2 flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-zinc-900/50 p-3">
-                  <Image
-                    src={base64 as string}
-                    height={400}
-                    width={400}
-                    alt="Image"
-                    className="rounded-md"
-                    aria-hidden="true"
+          <textarea 
+            className = "w-full rounded-md"
+            ref = {questionRef}
+          />
+        </div>
+        <div className = "flex flex-col gap-y-4 items-start">
+          <div className="flex items-center space-x-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black p-3 text-sm text-white">
+              2
+            </span>
+            <p className="text-xl font-semibold tracking-tight">Rubrik</p>
+            {/* buttons */}
+          </div>
+          <div className = "flex items-center">
+            <label
+              className = "font-semibold mr-2 ml-2 text-lg" 
+              htmlFor="def"
+            >
+              Default (IELTS):
+            </label>
+            <input 
+              className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
+              type="radio"
+              value = "default"
+              checked = {rubrik === "default"}
+              onChange={changeRubrik}
+              id = "def"
+            />
+
+            <label
+              className = "font-semibold mr-2 text-lg" 
+              htmlFor="cust"
+            >
+              Custom:
+            </label>
+            <input 
+              className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
+              type="radio"
+              value = "custom"
+              checked = {rubrik === "custom"}
+              onChange={changeRubrik}
+              id = "cust"
+            />
+          </div>
+          {(rubrik === "custom") && 
+            <textarea 
+              className = "w-full rounded-md"
+              ref = {rubrikRef}
+            />
+          }
+        </div>
+        <div id="image-div" className = "flex flex-col gap-y-4 items-start w-full">
+          <div className="flex items-center space-x-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black p-3 text-sm text-white">
+              3
+            </span>
+            <p className="text-xl font-semibold tracking-tight">Answer</p>
+          </div>
+          <div className = "flex items-center">
+            <label
+              className = "font-semibold mr-2 ml-2 text-lg" 
+              htmlFor="txt"
+            >
+              Text:
+            </label>
+            <input 
+              className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
+              type="radio"
+              value = "text"
+              checked = {answerType === "text"}
+              onChange={changeAnswerType}
+              id = "txt"
+            />
+
+            <label
+              className = "font-semibold mr-2 text-lg" 
+              htmlFor="img"
+            >
+              Image:
+            </label>
+            <input 
+              className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
+              type="radio"
+              value = "image"
+              checked = {answerType === "image"}
+              onChange={changeAnswerType}
+              id = "img"
+            />
+          </div>
+          {(answerType === "text") &&
+            <textarea 
+              className = "w-full rounded-md"
+              ref = {answerRef}
+            />
+          }
+          {(answerType === "image") && 
+            <label htmlFor="file-upload" className = "w-full">
+              {isFileUploaded ? (
+                base64 && (
+                  <div className="mt-2 w-full flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-zinc-900/50 p-3">
+                    <Image
+                      src={base64 as string}
+                      height={400}
+                      width={400}
+                      alt="Image"
+                      className="rounded-md"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-semibold text-slate-800">
+                      {file?.name}
+                    </span>
+                  </div>
+                )
+              ) : (
+                <div className="mt-2 w-full flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-zinc-900/50 p-6 hover:bg-zinc-200/70">
+                  <Upload className="h-8 w-8 text-slate-800" strokeWidth={3} />
+                  <div className="ml-5 text-left">
+                    <p className="font-semibold text-slate-900">Upload a file</p>
+                    <p className="text-xs font-medium text-slate-600">
+                      PNG, JPG, GIF, JPEG, WEBP up to 10MB
+                    </p>
+                  </div>
+                  <input
+                    id="file-upload"
+                    name="file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={onFileChange}
+                    className="sr-only h-full w-full"
                   />
-                  <span className="text-sm font-semibold text-slate-800">
-                    {file?.name}
-                  </span>
                 </div>
-              )
-            ) : (
-              <div className="mt-2 flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-zinc-900/50 p-6 hover:bg-zinc-200/70">
-                <Upload className="h-8 w-8 text-slate-800" strokeWidth={3} />
-                <div className="ml-5 text-left">
-                  <p className="font-semibold text-slate-900">Upload a file</p>
-                  <p className="text-xs font-medium text-slate-600">
-                    PNG, JPG, GIF, JPEG, WEBP up to 10MB
-                  </p>
-                </div>
-                <input
-                  id="file-upload"
-                  name="file-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={onFileChange}
-                  className="sr-only h-full w-full"
-                />
-              </div>
-            )}
-          </label>
+              )}
+            </label>
+          }
         </div>
 
         {loading ? (
@@ -200,7 +312,7 @@ export default function Home() {
               }}
               className="flex items-center justify-center gap-1 rounded-md bg-black py-1.5 text-lg font-semibold text-white shadow-sm hover:bg-black/80 focus:outline-none focus-visible:outline-none"
             >
-              Solve
+              Evaluate
               <svg
                 stroke="currentColor"
                 fill="currentColor"
