@@ -11,6 +11,8 @@ import { CornerDownRight, SendHorizonal, Upload } from "lucide-react"
 import Image from "next/image"
 import { Suspense, useEffect, useRef, useState } from "react"
 import Latex from "react-latex-next"
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export default function Home() {
   const { toast } = useToast()
@@ -18,14 +20,13 @@ export default function Home() {
   const [completion, setCompletion] = useState("")
   const [base64, setBase64] = useState<string | null>(null)
   const [isFileUploaded, setIsFileUploaded] = useState(false)
-  const [isContentLoaded, setIsContentLoaded] = useState(false)
+  // const [isContentLoaded, setIsContentLoaded] = useState(false)
   const [displayOutput, setDisplayOutput] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [converse, setConverse] = useState(false)
-  const [followUp, setFollowUp] = useState(false)
+  // const [followUp, setFollowUp] = useState(false)
   const [value, setValue] = useState("")
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  // const scrollAreaRef = useRef<HTMLDivElement>(null)
   useAutosizeTextArea(textAreaRef.current, value)
 
   const questionRef = useRef<HTMLTextAreaElement>(null)
@@ -33,16 +34,6 @@ export default function Home() {
   const answerRef = useRef<HTMLTextAreaElement>(null)
   const [rubrikType, setRubrikType] = useState<"default" | "custom">("default")
   const [answerType, setAnswerType] = useState<"text" | "image">("text")
-
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    initialMessages: [
-      {
-        id: "1",
-        role: "assistant",
-        content: completion,
-      },
-    ],
-  })
 
   const toBase64 = (file: File) => {
     return new Promise((resolve, reject) => {
@@ -77,7 +68,7 @@ export default function Home() {
 
     const question = questionRef.current!.value;
     const rubrik = rubrikRef !== null ? rubrikRef.current?.value: "";
-    const answer = answerRef !== null ? answerRef.current?.value: "";
+    let answer = answerRef !== null ? answerRef.current?.value: "";
 
     if(question.trim().length == 0){
       toast({
@@ -122,12 +113,31 @@ export default function Home() {
     setLoading(true)
     setCompletion("")
 
-    let base64:any = ""
+    // let base64:any = ""
+
+    // if(answerType === "image"){
+    //   base64 = await toBase64(file as File)
+
+    //   setBase64(base64 as string)
+    // }
 
     if(answerType === "image"){
-      base64 = await toBase64(file as File)
 
-      setBase64(base64 as string)
+      const imRes = await fetch("/api/parseImage",{
+        method: "post",
+        body: JSON.stringify({
+          image: base64
+        })
+      })
+
+      const imData = await imRes.json();
+
+      // add fallback
+
+      console.log("image text :-");
+      console.log(imData.message);
+
+      answer = imData.message
     }
 
     setDisplayOutput(true)
@@ -140,9 +150,9 @@ export default function Home() {
       body: JSON.stringify({
         question,
         rubrik: (rubrikType === "default")? "": rubrik,
-        answerType,
-        answer: (answerType === "image")? "": answer,
-        image: base64,
+        // answerType,
+        answer: answer,
+        // image: base64,
         rubrikType
       }),
     })
@@ -157,7 +167,7 @@ export default function Home() {
     let done = false
 
     while (!done) {
-      setIsContentLoaded(true)
+      // setIsContentLoaded(true)
       const { value, done: doneReading } = await reader.read()
       done = doneReading
       const chunkValue = decoder.decode(value)
@@ -165,7 +175,6 @@ export default function Home() {
     }
 
     setLoading(false)
-    setFollowUp(true)
 
     toast({
       variant: "success",
@@ -182,18 +191,12 @@ export default function Home() {
     setAnswerType(event.target.value)
   }
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
-    }
-  }, [messages])
-
   return (
     <main className="mt-12 flex w-full flex-col items-center justify-center px-4 text-center sm:mt-12">
       <h1 className="max-w-[708px] text-4xl font-bold tracking-tight text-slate-800 sm:text-6xl">
         Essay Whiz
       </h1>
-      <div className="flex w-full max-w-xl flex-col gap-y-6 bg-white p-8 text-slate-800">
+      <div className="flex min-w-[600px] max-w-xl flex-col gap-y-6 bg-white p-8 text-slate-800">
         <div className = "flex flex-col gap-y-4">
           <div className="flex items-center space-x-2">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black p-3 text-sm text-white">
@@ -388,59 +391,9 @@ export default function Home() {
               </svg>
               Output
             </span>
-            <Suspense fallback={<Loading />}>
-              {isContentLoaded ? (
-                <>
-                  <ScrollArea
-                    className="mt-3 max-h-[500px] overflow-auto"
-                    ref={scrollAreaRef}
-                  >
-                    <div className="prose mt-3 flex flex-col items-start justify-center break-words text-left leading-5 dark:prose-invert prose-li:mb-0">
-                      <span className=" py-1 font-bold text-black">
-                        Assistant
-                      </span>
-                      <Latex>{completion}</Latex>
-
-                      {messages.map(
-                        (m) =>
-                          m.id !== "1" && (
-                            <>
-                              {m.role === "user" && (
-                                <>
-                                  <span className="self-end py-1 text-base font-bold text-black">
-                                    User
-                                  </span>
-                                  <div
-                                    className="self-end rounded-b-xl rounded-l-xl bg-zinc-200 px-6 py-2 text-right text-black"
-                                    key={m.id}
-                                  >
-                                    <Latex>{m.content}</Latex>
-                                  </div>
-                                </>
-                              )}
-                              {m.role === "assistant" && (
-                                <>
-                                  <span className="self-start py-1 text-base font-bold text-black">
-                                    Assistant
-                                  </span>
-                                  <div
-                                    className="mb-4 self-start rounded-b-xl rounded-r-xl bg-zinc-200 px-6 py-2 text-left leading-7 text-black"
-                                    key={m.id}
-                                  >
-                                    <Latex>{m.content}</Latex>
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          )
-                      )}
-                    </div>
-                  </ScrollArea>
-                </>
-              ) : (
-                <Loading />
-              )}
-            </Suspense>
+            <div className = "mt-4">
+              <Markdown remarkPlugins={[remarkGfm]}>{completion}</Markdown>
+            </div>
           </div>
         )}
       </div>

@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     const question = body.question
     const rubrik = body.rubrik
     const rubrikType = body.rubrikType
-    const answerType = body.answerType
+    // const answerType = body.answerType
     const answer = body.answer
-    const image = body.image
+    // const image = body.image
 
     const ielts_rubrik = `The International English Language Testing System (IELTS) utilizes a detailed scoring rubric to assess English language proficiency. The scoring is based on a 9-band scale, where each band corresponds to a specific level of English proficiency. Here is an overview of the scoring rubric for IELTS:
 
@@ -64,20 +64,20 @@ export async function POST(request: NextRequest) {
     
     The IELTS scoring system ensures fair and accurate assessment of test takers' language abilities. For a more detailed breakdown of the scoring rubric and to understand the specific requirements for each band score, you can refer to the official IELTS websites ([IELTS Scoring in Detail](https://ielts.org/about-the-test/how-ielts-is-scored) and [IELTS Writing Band Descriptors and Key Assessment Criteria](https://ielts.org/news-and-insights/ielts-writing-band-descriptors-and-key-assessment-criteria)).`
 
-    const img_arr = [
-        {
-            type: "text", 
-            text: `Question:-
-        ${question}
-        Response: the response has been uploaded as an image. Parse the image properly to extract the written text, then evaluate and score the extracted text.
-        `},
-        {
-            type: "image_url",
-            image_url: {
-              url: image,
-            },
-        }
-    ]
+    // const img_arr = [
+    //     {
+    //         type: "text", 
+    //         text: `Question:-
+    //     ${question}
+    //     Response: the response has been uploaded as an image. Parse the image properly to extract the written text, then evaluate and score the extracted text.
+    //     `},
+    //     {
+    //         type: "image_url",
+    //         image_url: {
+    //           url: image,
+    //         },
+    //     }
+    // ]
 
     const text_arr = [
         {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       ]
 
     const res = await openai.chat.completions.create({
-      model: (answerType === "text")? "gpt-3.5-turbo": "gpt-4-vision-preview",
+      model: "gpt-3.5-turbo",
       stream: true,
       // temperature: 0.3,
       messages: [
@@ -100,18 +100,23 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "user",
+          // content: `forget any pervious response.you have to evaluate and score a student\'s response to a given question based on the evaluation and scoring rubrik provided below enclosed in triple quotes
+          // '''${rubrikType === "default"? ielts_rubrik: rubrik}'''
+          // in the next prompt you will be provided the question and the response to the question. Your evaluation and scoring should strictly be based on the provided rubrik. Provide your response strictly in markdown format. You should take extra care for butifying your final evaluation and scores in order to make it more user readable by having proper line spacings, paragraph spacings, by properly highlighting the important texts like scores, headings, important points of evaluation etc. you can also create tables and lists if required according to markdown format.
+          // `,
           content: `forget any pervious response.you have to evaluate and score a student\'s response to a given question based on the evaluation and scoring rubrik provided below enclosed in triple quotes
           '''${rubrikType === "default"? ielts_rubrik: rubrik}'''
-          in the next prompt you will be provided the question and the response to the question. Your evaluation and scoring should strictly be based on the provided rubrik. Your response should be properly formatted for better readability. Provide your response strictly in markdown format.
+          in the next prompt you will be provided the question and the response to the question. Your evaluation and scoring should strictly be based on the provided rubrik. Your response should be properly formatted in markdown format for better readability that is you can make tables, highlight important text by making them bold, use proper spacing between lines and paragraphs. You should highlight the scores by making them bold. Provide your response strictly in markdown format.
           `,
         },
         {
           role: "user",
           //@ts-ignore
-          content: (answerType === "text")? [...text_arr]: [...img_arr]
+          content: [...text_arr]
         },
         
       ],
+      max_tokens: 1500
     })
 
     // console.log(res)
