@@ -2,19 +2,18 @@
 
 import Loading from "@/components/loading/loading"
 import LoadingDots from "@/components/loading/loading-dots"
-import { ScrollArea } from "@/components/ui/scroll-area"
+// import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
-import useAutosizeTextArea from "@/lib/autosizeTextarea"
-import { useChat } from "ai/react"
+// import useAutosizeTextArea from "@/lib/autosizeTextarea"
+// import { useChat } from "ai/react"
 import "katex/dist/katex.min.css"
 import { CornerDownRight, SendHorizonal, Upload } from "lucide-react"
 import Image from "next/image"
 import { Suspense, useEffect, useRef, useState } from "react"
-import Latex from "react-latex-next"
+// import Latex from "react-latex-next"
 import Markdown from 'react-markdown'
 import remarkGfm from "remark-gfm"
-import remarkMath from "remark-math"
-import remarkRehype, { Options } from "remark-rehype"
+
 
 export default function Home() {
   const { toast } = useToast()
