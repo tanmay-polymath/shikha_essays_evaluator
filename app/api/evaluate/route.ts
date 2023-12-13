@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 
 // export const dynamic = "force-dynamic"
+export const runtime = "edge"
 
 export async function POST(request: NextRequest) {
   try {
