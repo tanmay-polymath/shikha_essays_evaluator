@@ -31,16 +31,8 @@ export default function Home() {
   const questionRef = useRef<HTMLTextAreaElement>(null)
   const rubrikRef = useRef<HTMLTextAreaElement>(null)
   const answerRef = useRef<HTMLTextAreaElement>(null)
-  const [rubrik, setRubrik] = useState<"default" | "custom">("default")
+  const [rubrikType, setRubrikType] = useState<"default" | "custom">("default")
   const [answerType, setAnswerType] = useState<"text" | "image">("text")
-
-  const prompt = `you are a friendly and encouraging maths assistant, capable of tackling a broad range of mathematical problems and analyzing user-uploaded images for solving or correcting problems. you ask for clarification on ambiguous queries to ensure accuracy. A key aspect of your interaction style is personalization. This approach helps in creating a more engaging and tailored learning experience. you maintain a helpful and patient demeanor, making mathematics approachable for users of all skill levels and fostering a positive learning environment.
-  If the image only has a problem solve it. If the image has a problem and a solution, check if it the solution is correct. If the solution is not correct, suggest how they can correct it.
-
-  Always use the specific LaTeX math mode delimiters for your response. LaTex math mode specific delimiters as following
-  inline math mode : \( and \)
-  display math mode: insert linebreak after opening $$, \[ and before closing $$, \]
-  `
 
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     initialMessages: [
@@ -51,6 +43,7 @@ export default function Home() {
       },
     ],
   })
+
   const toBase64 = (file: File) => {
     return new Promise((resolve, reject) => {
       const fileReader = new FileReader()
@@ -81,58 +74,108 @@ export default function Home() {
 
   const handleDataSubmit = async (e: any) => {
     e.preventDefault()
-    if (!file) {
+
+    const question = questionRef.current!.value;
+    const rubrik = rubrikRef !== null ? rubrikRef.current?.value: "";
+    const answer = answerRef !== null ? answerRef.current?.value: "";
+
+    if(question.trim().length == 0){
+      toast({
+        variant: "destructive",
+        title: "No Question Provided!",
+        description: "Please provide a question",
+      })
+
+      return;
+    }
+
+    if(rubrikType === "custom" && rubrik?.trim().length == 0){
+      toast({
+        variant: "destructive",
+        title: "No Rubrik Provided!",
+        description: "Please provide a rubrik",
+      })
+
+      return;
+    }
+
+    if(answerType === "text" && answer?.trim().length == 0){
+      toast({
+        variant: "destructive",
+        title: "No Answer Provided!",
+        description: "Please provide an answer",
+      })
+
+      return;
+    }
+
+    if (answerType === "image" && !file) {
       toast({
         variant: "destructive",
         title: "No File Uploaded!",
         description: "Please upload a file",
       })
+
       return
-    } else {
-      setLoading(true)
-      setCompletion("")
-      const base64 = await toBase64(file as File)
+    }
+
+    setLoading(true)
+    setCompletion("")
+
+    let base64:any = ""
+
+    if(answerType === "image"){
+      base64 = await toBase64(file as File)
 
       setBase64(base64 as string)
-      setDisplayOutput(true)
-      const response = await fetch("/api/completion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          link: base64,
-        }),
-      })
-      const data = response.body
-      if (!data) {
-        console.log("No data")
-        return
-      }
-      const reader = data.getReader()
-      const decoder = new TextDecoder()
-      let done = false
-
-      while (!done) {
-        setIsContentLoaded(true)
-        const { value, done: doneReading } = await reader.read()
-        done = doneReading
-        const chunkValue = decoder.decode(value)
-        setCompletion((prev) => prev + chunkValue)
-      }
-      setLoading(false)
-      setFollowUp(true)
-      toast({
-        variant: "success",
-        title: "Eureka!",
-        description: "Successfully solved the problem",
-      })
     }
+
+    setDisplayOutput(true)
+
+    const response = await fetch("/api/evaluate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        question,
+        rubrik: (rubrikType === "default")? "": rubrik,
+        answerType,
+        answer: (answerType === "image")? "": answer,
+        image: base64,
+        rubrikType
+      }),
+    })
+
+    const data = response.body
+    if (!data) {
+      console.log("No data")
+      return
+    }
+    const reader = data.getReader()
+    const decoder = new TextDecoder()
+    let done = false
+
+    while (!done) {
+      setIsContentLoaded(true)
+      const { value, done: doneReading } = await reader.read()
+      done = doneReading
+      const chunkValue = decoder.decode(value)
+      setCompletion((prev) => prev + chunkValue)
+    }
+
+    setLoading(false)
+    setFollowUp(true)
+
+    toast({
+      variant: "success",
+      title: "Eureka!",
+      description: "Successfully solved the problem",
+    })
   }
 
   const changeRubrik = (event:any) => {
-    setRubrik(event.target.value)
+    setRubrikType(event.target.value)
   }
 
   const changeAnswerType = (event:any) => {
@@ -182,7 +225,7 @@ export default function Home() {
               className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
               type="radio"
               value = "default"
-              checked = {rubrik === "default"}
+              checked = {rubrikType === "default"}
               onChange={changeRubrik}
               id = "def"
             />
@@ -197,12 +240,12 @@ export default function Home() {
               className="form-radio text-black border-black outline-none mr-5 cursor-pointer"
               type="radio"
               value = "custom"
-              checked = {rubrik === "custom"}
+              checked = {rubrikType === "custom"}
               onChange={changeRubrik}
               id = "cust"
             />
           </div>
-          {(rubrik === "custom") && 
+          {(rubrikType === "custom") && 
             <textarea 
               className = "w-full rounded-md"
               ref = {rubrikRef}
@@ -393,59 +436,6 @@ export default function Home() {
                       )}
                     </div>
                   </ScrollArea>
-
-                  {followUp && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConverse(true)
-                      }}
-                      className="mt-5 flex items-center gap-2 rounded-full border-2 border-slate-900 bg-zinc-200/70 px-6 py-1.5 text-base font-semibold text-slate-900 shadow-sm hover:bg-zinc-300/70 focus-visible:outline-none"
-                    >
-                      <CornerDownRight strokeWidth={2.5} />
-                      Ask a follow up
-                    </button>
-                  )}
-                  {converse && (
-                    <div className="mt-3 w-full">
-                      <div className="relative rounded-md shadow-sm">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-start pl-3 pt-3">
-                          <CornerDownRight strokeWidth={2.5} />
-                        </div>
-                        <textarea
-                          ref={textAreaRef}
-                          onChange={(e) => {
-                            handleInputChange(e)
-                            setValue(e.target.value)
-                          }}
-                          value={input}
-                          className="my-2 block min-h-[80px] w-full resize-none rounded-md border-2 border-slate-900 px-10 py-2.5 text-base text-slate-900 placeholder:font-medium placeholder:text-slate-500 focus:border-slate-900 focus:outline-none focus:ring-0 focus-visible:outline-none"
-                          placeholder="Ask a follow up question"
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-end pb-2 pr-3">
-                          <button
-                            onClick={(e: any) => {
-                              handleSubmit(e)
-                              setConverse(false)
-                            }}
-                            className="inline-flex items-center rounded-md bg-sky-500 px-2 py-1 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-                          >
-                            <SendHorizonal
-                              className="h-5 w-5"
-                              strokeWidth={2.2}
-                            />
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setConverse(false)}
-                        className="rounded-md bg-red-500 px-3 py-1.5 text-base font-semibold text-white shadow-sm hover:bg-red-500/80 focus-visible:outline-none "
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
                 </>
               ) : (
                 <Loading />
