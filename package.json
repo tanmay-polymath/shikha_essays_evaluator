@@ -36,6 +36,8 @@
     "react-latex-next": "^2.2.0",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "remark-rehype": "^11.0.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7"
   },

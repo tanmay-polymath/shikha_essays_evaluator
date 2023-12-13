@@ -12,7 +12,9 @@ import Image from "next/image"
 import { Suspense, useEffect, useRef, useState } from "react"
 import Latex from "react-latex-next"
 import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import remarkRehype, { Options } from "remark-rehype"
 
 export default function Home() {
   const { toast } = useToast()
@@ -23,17 +25,13 @@ export default function Home() {
   // const [isContentLoaded, setIsContentLoaded] = useState(false)
   const [displayOutput, setDisplayOutput] = useState(false)
   const [loading, setLoading] = useState(false)
-  // const [followUp, setFollowUp] = useState(false)
-  const [value, setValue] = useState("")
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  // const scrollAreaRef = useRef<HTMLDivElement>(null)
-  useAutosizeTextArea(textAreaRef.current, value)
-
+  // const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const questionRef = useRef<HTMLTextAreaElement>(null)
   const rubrikRef = useRef<HTMLTextAreaElement>(null)
   const answerRef = useRef<HTMLTextAreaElement>(null)
   const [rubrikType, setRubrikType] = useState<"default" | "custom">("default")
   const [answerType, setAnswerType] = useState<"text" | "image">("text")
+  const [completeGeneration,setCompleteGeneration] = useState<boolean>(false)
 
   const toBase64 = (file: File) => {
     return new Promise((resolve, reject) => {
@@ -175,6 +173,7 @@ export default function Home() {
     }
 
     setLoading(false)
+    setCompleteGeneration(true)
 
     toast({
       variant: "success",
@@ -189,6 +188,33 @@ export default function Home() {
 
   const changeAnswerType = (event:any) => {
     setAnswerType(event.target.value)
+  }
+
+  const resetPage = () => {
+    setFile(null)
+    setCompletion("")
+    setBase64(null)
+    setIsFileUploaded(false)
+    setDisplayOutput(false)
+    setRubrikType("default")
+    setAnswerType("text")
+    setCompleteGeneration(false)
+
+    if(questionRef !== null && questionRef.current !== null){
+      //@ts-ignore
+      questionRef.current.value = ""
+    }
+
+    if(answerRef !== null && answerRef.current !== null){
+      //@ts-ignore
+      answerRef.current.value = ""
+    }
+
+    if(rubrikRef !== null && rubrikRef.current !== null){
+      //@ts-ignore
+      rubrikRef.current.value = ""
+    }
+
   }
 
   return (
@@ -354,12 +380,15 @@ export default function Home() {
           <div className="flex flex-col gap-2">
             <button
               onClick={(e) => {
-                handleDataSubmit(e)
+                if(!completeGeneration)
+                  handleDataSubmit(e)
+                else
+                  resetPage()
               }}
               className="flex items-center justify-center gap-1 rounded-md bg-black py-1.5 text-lg font-semibold text-white shadow-sm hover:bg-black/80 focus:outline-none focus-visible:outline-none"
             >
-              Evaluate
-              <svg
+              {`${completeGeneration? "Reset":"Evaluate"}`}
+              {!completeGeneration && <svg
                 stroke="currentColor"
                 fill="currentColor"
                 strokeWidth="0"
@@ -374,7 +403,7 @@ export default function Home() {
                   d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z"
                   clipRule="evenodd"
                 ></path>
-              </svg>
+              </svg>}
             </button>
           </div>
         )}
@@ -392,7 +421,12 @@ export default function Home() {
               Output
             </span>
             <div className = "mt-4">
-              <Markdown remarkPlugins={[remarkGfm]}>{completion}</Markdown>
+              <Markdown 
+                remarkPlugins={[remarkGfm]}
+
+              >
+                {completion}
+              </Markdown>
             </div>
           </div>
         )}

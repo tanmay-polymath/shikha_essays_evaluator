@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
           // `,
           content: `forget any pervious response.you have to evaluate and score a student\'s response to a given question based on the evaluation and scoring rubrik provided below enclosed in triple quotes
           '''${rubrikType === "default"? ielts_rubrik: rubrik}'''
-          in the next prompt you will be provided the question and the response to the question. Your evaluation and scoring should strictly be based on the provided rubrik. Your response should be properly formatted in markdown format for better readability that is you can make tables, highlight important text by making them bold, use proper spacing between lines and paragraphs. You should highlight the scores by making them bold. Provide your response strictly in markdown format.
+          in the next prompt you will be provided the question and the response to the question. Your evaluation and scoring should strictly be based on the provided rubrik. Your response should be properly formatted with line breaks and important text highlighting in markdown format for better user readability that is you should highlight important text and scores by making them bold, use proper lists and use proper spacing between lines and paragraphs. Provide your response strictly in markdown format.
           `,
         },
         {
