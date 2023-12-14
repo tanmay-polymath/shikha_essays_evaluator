@@ -177,7 +177,7 @@ export default function Home() {
     toast({
       variant: "success",
       title: "Eureka!",
-      description: "Successfully solved the problem",
+      description: "Successfully evaluated the response",
     })
   }
 
@@ -214,6 +214,12 @@ export default function Home() {
       rubrikRef.current.value = ""
     }
 
+  }
+
+  const clearImage = () => {
+    setFile(null)
+    setIsFileUploaded(false)
+    setBase64(null)
   }
 
   return (
@@ -325,43 +331,53 @@ export default function Home() {
             />
           }
           {(answerType === "image") && 
-            <label htmlFor="file-upload" className = "w-full">
-              {isFileUploaded ? (
-                base64 && (
-                  <div className="mt-2 w-full flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-zinc-900/50 p-3">
-                    <Image
-                      src={base64 as string}
-                      height={400}
-                      width={400}
-                      alt="Image"
-                      className="rounded-md"
-                      aria-hidden="true"
+            <>
+              <label htmlFor="file-upload" className = "w-full">
+                {isFileUploaded ? (
+                  base64 && (
+                    <div className="mt-2 w-full flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-zinc-900/50 p-3">
+                      <Image
+                        src={base64 as string}
+                        height={400}
+                        width={400}
+                        alt="Image"
+                        className="rounded-md"
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm font-semibold text-slate-800">
+                        {file?.name}
+                      </span>
+                    </div>
+                  )
+                ) : (
+                  <div className="mt-2 w-full flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-zinc-900/50 p-6 hover:bg-zinc-200/70">
+                    <Upload className="h-8 w-8 text-slate-800" strokeWidth={3} />
+                    <div className="ml-5 text-left">
+                      <p className="font-semibold text-slate-900">Upload a file</p>
+                      <p className="text-xs font-medium text-slate-600">
+                        PNG, JPG, GIF, JPEG, WEBP up to 10MB
+                      </p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={onFileChange}
+                      className="sr-only h-full w-full"
                     />
-                    <span className="text-sm font-semibold text-slate-800">
-                      {file?.name}
-                    </span>
                   </div>
-                )
-              ) : (
-                <div className="mt-2 w-full flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-zinc-900/50 p-6 hover:bg-zinc-200/70">
-                  <Upload className="h-8 w-8 text-slate-800" strokeWidth={3} />
-                  <div className="ml-5 text-left">
-                    <p className="font-semibold text-slate-900">Upload a file</p>
-                    <p className="text-xs font-medium text-slate-600">
-                      PNG, JPG, GIF, JPEG, WEBP up to 10MB
-                    </p>
-                  </div>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={onFileChange}
-                    className="sr-only h-full w-full"
-                  />
-                </div>
-              )}
-            </label>
+                )}
+              </label>
+              {isFileUploaded &&
+                <button
+                  className = "bg-black text-white text-bold text-lg rounded-full px-3 py-1 hover:bg-slate-800"
+                  onClick = {clearImage}
+                >
+                  {`Clear Image`}
+                </button>
+              }
+            </>
           }
         </div>
 
