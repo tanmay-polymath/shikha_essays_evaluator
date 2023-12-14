@@ -11,7 +11,7 @@ import { CornerDownRight, SendHorizonal, Upload } from "lucide-react"
 import Image from "next/image"
 import { Suspense, useEffect, useRef, useState } from "react"
 // import Latex from "react-latex-next"
-import Markdown from 'react-markdown'
+import ReactMarkdown from 'react-markdown'
 import remarkGfm from "remark-gfm"
 
 
@@ -420,12 +420,12 @@ export default function Home() {
               Output
             </span>
             <div className = "mt-4">
-              <Markdown 
+              <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
-
+                className = "markdown"
               >
                 {completion}
-              </Markdown>
+              </ReactMarkdown>
             </div>
           </div>
         )}
